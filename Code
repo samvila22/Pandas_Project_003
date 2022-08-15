@@ -1,0 +1,170 @@
+Use an api to generate description of each type of business. Google search result for each description. Use an algorithm to loop through every category and compare to company google generated description. Return top 5 most similar where we would need another step afterwards 
+
+import pandas as pd
+data1 = pd.read_csv("/content/core_capabilities_google_search_data.csv")
+data2 = pd.read_csv("/content/product_features_text.csv")
+
+#Idea begins here. Predicting industries based off similarity of descriptions
+[ ]
+#test with a couple sample descriptions for general categories 
+services = "offers intangible items. provide functions that make life more comfortable or care for issues that people can not provide for themselves. performs tasks for the benefit of their customers"
+hardware = "the Seller in designing, developing and marketing high security cryptographic hardware products. that sell tools and construction materials needed to build, renovate, or maintain any structure. to the physical parts and durable equipment"
+software = "is any software or set of computer programs used.applications are used to increase productivity, measure productivity, and perform online functions accurately. back end analytics and insights"
+
+[ ]
+text = ""
+for i in data1["google_result_text"]:  
+  text += i
+  
+#compile all words together 
+total = services + hardware + software + text
+total = total.replace(".", " ")
+total = total.split()
+total_freq = {}
+
+for i in total:
+    if i in total_freq:
+        total_freq[i] += 1
+    else:
+        total_freq[i] = 1
+total_words = list(total_freq.keys())
+#list of all words. Will use for vectorized comparison
+total_words
+
+#vectorized list for each of 3 industry types (hardware software services)
+
+services_freq = {sent: 0 for sent in total_words}
+serv = services.lower()                  
+serv = serv.replace(",", " ")
+serv = serv.replace(".", " ")
+serv = serv.split()  
+for i in serv:
+    if i in services_freq:
+        services_freq[i] += 1
+hardware_freq = {sent: 0 for sent in total_words}
+hard = hardware.lower()                  
+hard = hard.replace(",", " ")
+hard = hard.replace(".", " ")
+hard = hard.split()  
+for i in hard:
+    if i in hardware_freq:
+        hardware_freq[i] += 1
+software_freq = {sent: 0 for sent in total_words}
+soft = software.lower()                  
+soft = soft.replace(",", " ")
+soft = soft.replace(".", " ")
+soft = soft.split()  
+for i in soft:
+    if i in software_freq:
+        software_freq[i] += 1
+        
+        
+#test is just the practcice code I made to have prediction work on single level before automating all observations.
+
+test = data1["google_result_text"][0]
+test = test.lower()                  
+test = test.replace(",", " ")
+test = test.replace(".", " ")
+test = test.split()  
+test_freq = {sent: 0 for sent in total_words}
+for i in test:
+    if i in test_freq:
+        test_freq[i] += 1
+        
+#below would just be the industry column 
+import numpy as np
+industry_list = ["services", "hardware", "software"]
+freq_list = [services_freq, hardware_freq, software_freq]
+from numpy import dot
+from numpy.linalg import norm
+cos_sim_list = []
+b = list(test_freq.values())
+for i in freq_list:
+  a = list(i.values())
+  cos_sim = dot(a, b)/(norm(a)*norm(b))
+  cos_sim_list.append(cos_sim)
+indx = np.argmax(cos_sim_list)
+append = industry_list[indx]
+
+#we would then append the selected industry to a new column for each company. Above was the one case test, now ill do it with the dataset.
+
+from numpy import dot
+from numpy.linalg import norm
+import numpy as np
+industry_list = ["services", "hardware", "software"]
+freq_list = [services_freq, hardware_freq, software_freq]
+prediction_list = []
+for j in data1["google_result_text"]:
+  test = j
+  test = test.lower()                  
+  test = test.replace(",", " ")
+  test = test.replace(".", " ")
+  test = test.split()  
+  test_freq = {sent: 0 for sent in total_words}
+  for i in test:
+      if i in test_freq:
+          test_freq[i] += 1
+  cos_sim_list = []
+  b = list(test_freq.values())
+  for i in freq_list:
+    a = list(i.values())
+    cos_sim = dot(a, b)/(norm(a)*norm(b))
+    cos_sim_list.append(cos_sim)
+  indx = np.argmax(cos_sim_list)
+  append = industry_list[indx]
+  prediction_list.append(append)
+
+#append prediction_list as our industry that has been assigned 
+
+data1["industry"] = prediction_list
+data1
+
+
+
+#Actual Model, compile all words and not just those 3 potential industries
+
+total = ""
+for i in data1["google_result_text"]:
+  total += i
+for i in data2["feature_text"]:
+  total += i
+
+#compile all words
+total = total.replace(".", " ")
+total = total.split()
+total_freq = {}
+
+for i in total:
+    if i in total_freq:
+        total_freq[i] += 1
+    else:
+        total_freq[i] = 1
+total_words = list(total_freq.keys())
+#list of all words. Will use for vectorized comparison
+total_words
+
+from numpy import dot
+from numpy.linalg import norm
+import numpy as np
+industry_list = ["services", "hardware", "software"]
+freq_list = [services_freq, hardware_freq, software_freq]
+prediction_list = []
+for j in data1["google_result_text"]:
+  test = j
+  test = test.lower()                  
+  test = test.replace(",", " ")
+  test = test.replace(".", " ")
+  test = test.split()  
+  test_freq = {sent: 0 for sent in total_words}
+  for i in test:
+      if i in test_freq:
+          test_freq[i] += 1
+  cos_sim_list = []
+  b = list(test_freq.values())
+  for i in freq_list:
+    a = list(i.values())
+    cos_sim = dot(a, b)/(norm(a)*norm(b))
+    cos_sim_list.append(cos_sim)
+  indx = np.argmax(cos_sim_list)
+  append = industry_list[indx]
+  prediction_list.append(append)
